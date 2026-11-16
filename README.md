@@ -1,52 +1,49 @@
-# PURPLE — Round 2 Submission
+# FairSplit: Split Smart. Settle Easy. Stay Fair.
+Group expense tracker where **a payment only counts once the receiver approves it**.
 
-## 1. Team Name
-[Enter your team name]
+**Stack:** React + Vite, React Router, Lucide, Recharts · FastAPI, SQLAlchemy, SQLite (Decimal money) · no API keys.
 
+## Run
+```bash
+# terminal 1
+cd backend && pip install -r requirements.txt && uvicorn main:app --reload      # http://127.0.0.1:8000
+# terminal 2
+cd frontend && npm install && npm run dev                                       # http://localhost:5173
+```
+The SQLite file (`backend/fairsplit.db`) is created and seeded on first start. Delete it to reset. Needs Python 3.10+.
+A random signing secret is generated once into `backend/.secret` (or set `FAIRSPLIT_SECRET`). Sessions last 7 days.
 
+**Tests:** `cd backend && pip install httpx && python test_api.py` (uses a throw-away database).
 
-## 2. Problem Statement & Solution Description
+## Demo logins (password `demo123`)
+aarav@demo.com · meera@demo.com · rohan@demo.com · isha@demo.com (or tap a demo chip on the login page).
+Try: sign in as Aarav → Approvals → approve Isha's ₹500 (partial payment, +20 XP). Then sign in as Rohan to approve Meera's rent payment.
 
-**Problem Statement:**
+## Workflows
+- **Add expense:** equal or custom split (amounts: numbers only, max 2 decimals, up to ₹1,00,00,000; leftover paise go to the first person so shares always add up exactly); payer never owes themselves; participants get notified.
+- **I've paid:** amount, method, reference → status "Awaiting Receiver Confirmation". Debt unchanged. You can never have more awaiting than you actually owe that person.
+- **Approve/Reject:** only the receiver. Approve settles oldest shares first (partials supported), awards XP/badges, notifies both. Reject needs a reason; debtor can resubmit. Each payment can be decided exactly once, even with double-clicks or two tabs.
+- **Leaving a group:** only when you owe nothing, nobody owes you, and no payment of yours is awaiting.
+- **Budget Baba:** debt simplification, shown as suggestions only.
+- **Transaction Titles:** fun Ambani / Vijay Mallya / Nirmala Sitharaman badges based on balances (see below).
+- **Weekly summary:** computed on demand; a background thread creates weekend reminders only while the server runs.
 
-[Describe the problem statement your team is addressing.]
+## Transaction Titles (fun badges)
+Besides the XP achievements, each group gets playful **titles** based on who owes whom. They are recomputed from the group's current balances and are for fun only: they never change any amount.
 
-**Proposed Solution:**
+| Title | Who gets it | How it's decided |
+|---|---|---|
+| 🏦 **Ambani** | The group's biggest creditor | Highest net amount to **receive** (paid the most / is owed the most) |
+| 🏃 **Vijay Mallya** | The group's biggest debtor | Highest net amount **owed** to others (deepest in debt) |
+| 🧾 **Nirmala Sitharaman** | The middleman of a chain | Is both a debtor and a creditor in a chain, e.g. A owes B, B owes C, and A owes C. **B** gets the title, since money flows through them |
 
-[Briefly explain your proposed solution and how it addresses the problem.]
+**Rules**
+- Titles are per group and based on *settled* balances only: a payment still awaiting receiver approval does not count.
+- A title is only given when there is something to rank (no debts, no titles). Ties go to the person with the earliest unsettled share.
+- One person can hold only one title at a time, in the order Ambani, Vijay Mallya, Nirmala Sitharaman.
+- Titles move as soon as payments are approved, so settling up is the way to lose Vijay Mallya.
 
+**Example:** A owes B ₹300, B owes C ₹300, and A owes C ₹200. C is owed the most, so C is **Ambani**. A owes the most, so A is **Vijay Mallya**. B both owes and is owed, so B is **Nirmala Sitharaman**.
 
-
-## 3. Selected Features
-
-Your prototype must prioritize the functional implementation of **two selected features**. Other features may be represented through static UI elements and do not require functional implementation.
-
-### Feature 1: [Feature Name]
-
-[Briefly elaborate on the feature, its purpose, and its expected functionality.]
-
-### Feature 2: [Feature Name]
-
-[Briefly elaborate on the feature, its purpose, and its expected functionality.]
-
-
-
-## 4. Setup & Running Instructions
-
-[Provide clear, step-by-step instructions to install dependencies, configure the project if necessary, and run the prototype locally.]
-
-
-
-## 5. Feature Demonstration
-
-Provide step-by-step instructions for accessing and testing each of your two selected features.
-
-### Feature 1: [Feature Name]
-1. [Steps to access the feature.]
-2. [Steps to test its functionality.]
-3. [Expected outcome.]
-
-### Feature 2: [Feature Name]
-1. [Steps to access the feature.]
-2. [Steps to test its functionality.]
-3. [Expected outcome.]
+## Layout
+`backend/main.py` (models, API, logic) · `backend/seed.py` · `frontend/src/App.jsx` (all pages) · `frontend/src/styles.css`
