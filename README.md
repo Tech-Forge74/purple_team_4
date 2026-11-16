@@ -26,6 +26,19 @@ A React + Vite frontend shows a dashboard, group pages, "who owes whom" balances
 
 > **Planned (not in the code yet):** *Transaction badges.* Ambani goes to the person with the most to receive, Vijay Mallya to the person deepest in debt, and Nirmala Sitharaman to the middleman of a chain (A owes B, B owes C, A owes C → B). They would be per group, based on settled balances only, and would never change any amount.
 
+
+Weekly Batch: Ambani, Mallya & Nirmala of the Week
+
+Every week the group is "batched" and each member can earn a title based on how money actually moved (approved payments only):
+
+Title	Who gets it	Meaning
+👑 Ambani of the Week	The person who made the most payments during the week	The group's top payer
+🏴‍☠️ Vijay Mallya of the Week	The person who made no payment at all while owing money	The one who vanished with the dues
+🧾 Nirmala of the Week	The middle person in a chain of debts	Settles things without paying a rupee
+
+How Nirmala works: if A owes B and B owes C, B does not need to pay anyone. Budget Baba's debt simplification collapses the chain into a single payment, A pays C directly, and B, who only sat in the middle, becomes the Nirmala of the payment. (If the loop closes, with C also owing A, the debts cancel out and nobody has to pay.)
+
+Titles are shown on the Weekly page, and Ambani and Mallya feed the existing XP, badge and "Ghost Baba watchlist" system.
 ## 4. Setup & Running Instructions
 
 Requirements: Python 3.10+ and Node.js 18+ with npm. No internet is needed after installing dependencies, and no API keys are used.
