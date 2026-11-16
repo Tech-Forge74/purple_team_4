@@ -2,7 +2,7 @@
 
 ## 1. Team Name
 
-[Team number / name: fill in] — **FairSplit**
+[Team number:32 / name: Team Casade] — **FairSplit**
 
 ## 2. Problem Statement & Solution Description
 
