@@ -1,49 +1,89 @@
 # FairSplit: Split Smart. Settle Easy. Stay Fair.
-Group expense tracker where **a payment only counts once the receiver approves it**.
 
-**Stack:** React + Vite, React Router, Lucide, Recharts · FastAPI, SQLAlchemy, SQLite (Decimal money) · no API keys.
+## 1. Team Name
 
-## Run
+[Team number / name: fill in] — **FairSplit**
+
+## 2. Problem Statement & Solution Description
+
+**Problem Statement:**
+
+Shared expenses in groups such as flatmates, trips and friends cause disputes. Most split apps let a debtor mark a debt as "paid" without the receiver agreeing. This leaves balances unreliable, and it is hard to see who still owes whom and what the smallest set of payments to settle up would be.
+
+**Proposed Solution:**
+
+FairSplit is a group expense tracker where **a payment only counts once the receiver approves it**. Members add expenses with an equal or custom split. A debtor records a payment and it waits for the receiver's confirmation, while the debt stays unchanged. Approval settles the oldest shares first, and partial payments are supported. A debt-simplification helper called Budget Baba suggests the fewest payments needed to settle a group. XP, levels and achievement badges reward on-time settling. The prototype ships with seeded demo users, groups and expenses. All money is stored as `Decimal`, and no API keys are needed.
+
+## 3. Selected Features
+
+### Feature 1: Receiver-Approved Payment Workflow
+
+A FastAPI backend with SQLAlchemy and SQLite stores expenses as per-person shares. A payment moves to "Awaiting Receiver Confirmation" and only the receiver can approve or reject it. Approval settles the oldest shares first, supports partial payments, awards XP and badges, and notifies both sides. Rejection needs a reason, and the debtor can resubmit. Each payment can be decided exactly once, even with double-clicks or two open tabs. You can never have more awaiting than you actually owe that person. Leftover paise in a split go to the first person, so shares always add up exactly.
+
+### Feature 2: Balances, Budget Baba and Rewards
+
+A React + Vite frontend shows a dashboard, group pages, "who owes whom" balances, approvals, notifications, history and a weekly summary. **Budget Baba** simplifies debts into suggested payments (suggestions only, never applied automatically). Every approved payment gives the payer +20 XP, and clearing all debts gives +10 XP more. Level is `XP ÷ 100 + 1`. Six achievement badges can be unlocked: First Settlement, Five Payments Completed, Debt-Free Hero, Weekend Warrior, Consistent Settler and Group Champion. A group can only be left when you owe nothing, nobody owes you, and none of your payments is awaiting.
+
+> **Planned (not in the code yet):** *Transaction badges.* Ambani goes to the person with the most to receive, Vijay Mallya to the person deepest in debt, and Nirmala Sitharaman to the middleman of a chain (A owes B, B owes C, A owes C → B). They would be per group, based on settled balances only, and would never change any amount.
+
+## 4. Setup & Running Instructions
+
+Requirements: Python 3.10+ and Node.js 18+ with npm. No internet is needed after installing dependencies, and no API keys are used.
+
+Start the backend in terminal 1:
+
 ```bash
-# terminal 1
-cd backend && pip install -r requirements.txt && uvicorn main:app --reload      # http://127.0.0.1:8000
-# terminal 2
-cd frontend && npm install && npm run dev                                       # http://localhost:5173
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload      # http://127.0.0.1:8000
 ```
-The SQLite file (`backend/fairsplit.db`) is created and seeded on first start. Delete it to reset. Needs Python 3.10+.
-A random signing secret is generated once into `backend/.secret` (or set `FAIRSPLIT_SECRET`). Sessions last 7 days.
 
-**Tests:** `cd backend && pip install httpx && python test_api.py` (uses a throw-away database).
+Start the frontend in terminal 2:
 
-## Demo logins (password `demo123`)
-aarav@demo.com · meera@demo.com · rohan@demo.com · isha@demo.com (or tap a demo chip on the login page).
-Try: sign in as Aarav → Approvals → approve Isha's ₹500 (partial payment, +20 XP). Then sign in as Rohan to approve Meera's rent payment.
+```bash
+cd frontend
+npm install
+npm run dev                    # http://localhost:5173
+```
 
-## Workflows
-- **Add expense:** equal or custom split (amounts: numbers only, max 2 decimals, up to ₹1,00,00,000; leftover paise go to the first person so shares always add up exactly); payer never owes themselves; participants get notified.
-- **I've paid:** amount, method, reference → status "Awaiting Receiver Confirmation". Debt unchanged. You can never have more awaiting than you actually owe that person.
-- **Approve/Reject:** only the receiver. Approve settles oldest shares first (partials supported), awards XP/badges, notifies both. Reject needs a reason; debtor can resubmit. Each payment can be decided exactly once, even with double-clicks or two tabs.
-- **Leaving a group:** only when you owe nothing, nobody owes you, and no payment of yours is awaiting.
-- **Budget Baba:** debt simplification, shown as suggestions only.
-- **Transaction Titles:** fun Ambani / Vijay Mallya / Nirmala Sitharaman badges based on balances (see below).
-- **Weekly summary:** computed on demand; a background thread creates weekend reminders only while the server runs.
+Open http://localhost:5173. The Vite dev server proxies `/api` to the backend. Backend API documentation is at http://127.0.0.1:8000/docs.
 
-## Transaction Titles (fun badges)
-Besides the XP achievements, each group gets playful **titles** based on who owes whom. They are recomputed from the group's current balances and are for fun only: they never change any amount.
+The SQLite file (`backend/fairsplit.db`) is created and seeded on first start. Delete it to reset. A random signing secret is generated once into `backend/.secret` (or set `FAIRSPLIT_SECRET`). Sessions last 7 days.
 
-| Title | Who gets it | How it's decided |
-|---|---|---|
-| 🏦 **Ambani** | The group's biggest creditor | Highest net amount to **receive** (paid the most / is owed the most) |
-| 🏃 **Vijay Mallya** | The group's biggest debtor | Highest net amount **owed** to others (deepest in debt) |
-| 🧾 **Nirmala Sitharaman** | The middleman of a chain | Is both a debtor and a creditor in a chain, e.g. A owes B, B owes C, and A owes C. **B** gets the title, since money flows through them |
+Validation:
 
-**Rules**
-- Titles are per group and based on *settled* balances only: a payment still awaiting receiver approval does not count.
-- A title is only given when there is something to rank (no debts, no titles). Ties go to the person with the earliest unsettled share.
-- One person can hold only one title at a time, in the order Ambani, Vijay Mallya, Nirmala Sitharaman.
-- Titles move as soon as payments are approved, so settling up is the way to lose Vijay Mallya.
+```bash
+# backend
+cd backend && pip install httpx && python test_api.py   # uses a throw-away database
 
-**Example:** A owes B ₹300, B owes C ₹300, and A owes C ₹200. C is owed the most, so C is **Ambani**. A owes the most, so A is **Vijay Mallya**. B both owes and is owed, so B is **Nirmala Sitharaman**.
+# frontend
+cd frontend && npm run build
+```
 
-## Layout
-`backend/main.py` (models, API, logic) · `backend/seed.py` · `frontend/src/App.jsx` (all pages) · `frontend/src/styles.css`
+The frontend build and the 165 backend API checks passed during verification.
+
+## 5. Feature Demonstration
+
+Demo logins (password `demo123`): aarav@demo.com · meera@demo.com · rohan@demo.com · isha@demo.com. You can also tap a demo chip on the login page.
+
+### Feature 1: Receiver-Approved Payment Workflow
+
+1. Sign in as **Aarav** and open **Approvals**. Isha's ₹500 payment is waiting.
+2. Approve it. It is a partial payment, so the debt reduces but stays open, and Isha earns +20 XP.
+3. Sign out and sign in as **Rohan**. Approve Meera's rent payment.
+4. To test the safeguards, add an expense, record a payment as the debtor, then try to pay more than you owe, or approve the same payment in two tabs.
+
+**Expected outcome:** debt changes only after the receiver approves. Both people are notified, the oldest shares settle first, and a payment can be decided only once.
+
+### Feature 2: Balances, Budget Baba and Rewards
+
+1. Open a group page and the **Who owes whom** balances. Check the Budget Baba suggestions for the simplest way to settle.
+2. Open **Achievements** as Isha or Meera to see XP, level, streak and unlocked badges.
+3. Check **Notifications**, **Weekly summary** and **History** for the full activity trail.
+4. Try leaving a group while you still owe money. It is blocked until you are settled.
+
+**Expected outcome:** balances, suggestions, XP and badges stay consistent with the approved payments.
+
+## Project Layout
+
+`backend/main.py` (models, API, logic) · `backend/seed.py` · `backend/test_api.py` · `frontend/src/App.jsx` (all pages) · `frontend/src/styles.css`
